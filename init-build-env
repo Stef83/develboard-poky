@@ -1,0 +1,79 @@
+#!/bin/bash
+
+dvlr_board=develboard
+
+# Clone yocto/poky git repository
+[ -d poky ] \
+|| git clone git://git.yoctoproject.org/poky \
+|| return
+
+cd poky \
+|| return
+
+git branch | grep -q $dvlr_board \
+|| git checkout daisy-11.0.1 -b $dvlr_board \
+|| return
+
+
+# Clone openembedded meta layer
+[ -d meta-openembedded ] \
+|| git clone git://git.openembedded.org/meta-openembedded \
+|| return
+
+cd meta-openembedded \
+|| return
+
+git branch | grep -q $dvlr_board \
+|| git checkout origin/daisy -b $dvlr_board \
+|| return
+
+cd ..
+
+
+# Clone Qt5 meta layer
+[ -d meta-qt5 ] \
+|| git clone git://github.com/meta-qt5/meta-qt5.git \
+|| return
+
+cd meta-qt5 \
+|| return
+
+git branch | grep -q $dvlr_board \
+|| git checkout origin/daisy -b $dvlr_board \
+|| return
+
+cd ..
+
+
+# Clone Atmel meta layer
+
+[ -d meta-atmel ] \
+|| git clone http://github.com/linux4sam/meta-atmel \
+|| return
+
+cd meta-atmel \
+|| return
+
+git branch | grep -q $dvlr_board \
+|| git checkout origin/master -b $dvlr_board \
+|| return
+
+cd ..
+
+
+# Setup local configuration
+
+# Config layers
+if [ ! -f build-$dvlr_board/conf/bblayers.conf ]; then
+	mkdir -p build-$dvlr_board/conf
+	cp ../conf/bblayers.conf build-$dvlr_board/conf
+	sed -i "s|{__PWD__}|$(pwd)|g" build-$dvlr_board/conf/bblayers.conf
+fi
+
+# Config settings
+if [ ! -f build-$dvlr_board/conf/local.conf ]; then
+	mkdir -p build-$dvlr_board/conf
+	cp ../conf/local.conf build-$dvlr_board/conf
+fi
+
+source oe-init-build-env build-$dvlr_board
