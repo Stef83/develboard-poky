@@ -22,18 +22,31 @@ BAREBOXENV_SYMLINK ?= "bareboxenv-${MACHINE}.bin"
 INSANE_SKIP_${PN} = "True"
 
 do_pre_configure() {
-	if [ -f ${PN}-${PV}.config ]; then
-		cp ${WORKDIR}/${PN}-${PV}.config ${WORKDIR}/defconfig
-	fi
+	defconfig=${S}/../git/buildroot/board/develer/develboard/${PN}-${PV}.config
 
 	if [ -f ${WORKDIR}/defconfig ]; then
 		cp ${WORKDIR}/defconfig ${S}/.config
+		oe_runmake oldconfig
+	elif [ -f ${defconfig} ]; then
+		cp ${defconfig} ${S}/.config
 		oe_runmake oldconfig
 	else
 		oe_runmake ${BAREBOX_MACHINE}
 	fi
 }
 addtask pre_configure before do_configure after do_patch
+
+do_my_patch() {
+	cd "${S}"
+	patchdir=../git/buildroot/board/develer/develboard/${PN}-${PV}-patches
+	cp ${patchdir}/${PN}-${PV}-*.patch patches
+
+	for p in $(ls -A patches/*); do
+		patch -p1 -N --dry-run -i ${p} | grep -q "patch detected.*Skipping patch" \
+		|| patch -p1 -N < ${p}
+	done
+}
+addtask my_patch after do_patch before do_pre_configure
 
 do_compile () {
 	if [ "${@base_contains('DISTRO_FEATURES', 'ld-is-gold', 'ld-is-gold', '', d)}" = "ld-is-gold" ] ; then
@@ -63,8 +76,8 @@ do_deploy[dirs] = "${S}"
 addtask deploy before do_build after do_compile
 
 do_env_deploy() {
-	# handle environment
-	#install ${S}/common/barebox_default_env ${DEPLOY_DIR_IMAGE}/${BAREBOXENV_BIN}
+	envdir=${S}/../git/buildroot/board/develer/develboard/${PN}-${PV}-env
+	${S}/scripts/bareboxenv -s ${envdir} ${DEPLOY_DIR_IMAGE}/${BAREBOXENV_BIN}
 
 	cd ${DEPLOY_DIR_IMAGE}
 	rm -f ${BAREBOXENV_SYMLINK}
