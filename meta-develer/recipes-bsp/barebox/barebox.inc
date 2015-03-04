@@ -22,6 +22,10 @@ BAREBOXENV_SYMLINK ?= "bareboxenv-${MACHINE}.bin"
 INSANE_SKIP_${PN} = "True"
 
 do_pre_configure() {
+	if [ -f ${PN}-${PV}.config ]; then
+		cp ${WORKDIR}/${PN}-${PV}.config ${WORKDIR}/defconfig
+	fi
+
 	if [ -f ${WORKDIR}/defconfig ]; then
 		cp ${WORKDIR}/defconfig ${S}/.config
 		oe_runmake oldconfig
