@@ -13,16 +13,13 @@ SRC_URI_develboard = " \
 SRC_URI[defconfig.md5sum] = "4766847941dfcd39058be7348ea8d7bc"
 SRC_URI[defconfig.sha256sum] = "a8fe1676b104c0685c4c1b7fbffd919277b767e31c429fef5c098775b1664dbe"
 
-do_configure_prepend() {
-	# workaround to populate the kernel build directory
-	rsync -a ${S}/ ${B}/
+# workaround to make the kernel compile without a local defconfig file
+FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
+SRC_URI_develboard += "file://dummy.cfg"
 
+do_configure_prepend() {
 	# copy custom defconfig to the kernel build directory
 	cp ${WORKDIR}/linux-linux4sam_4.6.config ${B}/.config
-}
-
-# inhibit standard defconfig management, do nothing
-do_kernel_configme() {
 }
 
 COMPATIBLE_MACHINE_develboard = "develboard"
