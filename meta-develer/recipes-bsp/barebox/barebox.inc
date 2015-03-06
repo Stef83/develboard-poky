@@ -9,6 +9,7 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=057bf9e50e1ca857d0eb97bfe4ba8e5d"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 inherit kernel-arch
+inherit deploy
 
 EXTRA_OEMAKE = "CROSS_COMPILE=${TARGET_PREFIX}"
 
@@ -48,7 +49,7 @@ do_my_patch() {
 }
 addtask my_patch after do_patch before do_pre_configure
 
-do_compile () {
+do_compile() {
 	if [ "${@base_contains('DISTRO_FEATURES', 'ld-is-gold', 'ld-is-gold', '', d)}" = "ld-is-gold" ] ; then
 		sed -i 's/$(CROSS_COMPILE)ld/$(CROSS_COMPILE)ld.bfd/g' Makefile
 	fi
@@ -58,29 +59,33 @@ do_compile () {
 	oe_runmake all
 }
 
-do_deploy () {
-	install -d ${DEPLOY_DIR_IMAGE}
-	install ${S}/${BAREBOX_BINARY} ${DEPLOY_DIR_IMAGE}/${BAREBOX_IMAGE}
+do_deploy() {
+	install -d ${DEPLOYDIR}
+	install ${B}/${BAREBOX_BINARY} ${DEPLOYDIR}/${BAREBOX_IMAGE}
 
-	cd ${DEPLOY_DIR_IMAGE}
+	cd ${DEPLOYDIR}
 	rm -f ${BAREBOX_SYMLINK}
 	ln -sf ${BAREBOX_IMAGE} ${BAREBOX_SYMLINK}
+	rm -f u-boot.bin
+	ln -sf ${BAREBOX_IMAGE} u-boot.bin
 
 	install -d ${STAGING_BINDIR_NATIVE}
-	cd ${S}
+	cd ${B}
 	install -m 755 scripts/mkimage ${STAGING_BINDIR_NATIVE}/
 	install -m 755 scripts/bareboxenv ${STAGING_BINDIR_NATIVE}/
 }
-
-do_deploy[dirs] = "${S}"
 addtask deploy before do_build after do_compile
 
-do_env_deploy() {
-	envdir=${S}/../git/buildroot/board/develer/develboard/${PN}-${PV}-env
-	${S}/scripts/bareboxenv -s ${envdir} ${DEPLOY_DIR_IMAGE}/${BAREBOXENV_BIN}
+do_deploy_append() {
+	ENVDIR=${B}/../git/buildroot/board/develer/develboard/${PN}-${PV}-env
+	${B}/scripts/bareboxenv -s ${ENVDIR} ${B}/${BAREBOXENV_BIN}
 
-	cd ${DEPLOY_DIR_IMAGE}
+	install -d ${DEPLOYDIR}
+	install ${B}/${BAREBOXENV_BIN} ${DEPLOYDIR}/${BAREBOXENV_BIN}
+
+	cd ${DEPLOYDIR}
 	rm -f ${BAREBOXENV_SYMLINK}
 	ln -sf ${BAREBOXENV_BIN} ${BAREBOXENV_SYMLINK}
+	rm -f barebox.env
+	ln -sf ${BAREBOXENV_BIN} barebox.env
 }
-addtask env_deploy before do_build after do_deploy
