@@ -14,7 +14,7 @@ inherit deploy
 EXTRA_OEMAKE = "CROSS_COMPILE=${TARGET_PREFIX}"
 
 BAREBOX_MACHINE ?= "${MACHINE}_defconfig"
-BAREBOX_BINARY ?= "arch/arm/pbl/zbarebox.bin"
+BAREBOX_BINARY ?= "barebox-flash-image"
 BAREBOX_IMAGE ?= "barebox-${MACHINE}-${PV}-${PR}.bin"
 BAREBOXENV_BIN ?= "bareboxenv-${MACHINE}-${PV}-${PR}.bin"
 BAREBOX_SYMLINK ?= "barebox-${MACHINE}.bin"
