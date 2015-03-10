@@ -167,7 +167,8 @@
         "script/sshd.sh",
         "script/vmtool.sh",
         "script/cleanup.sh",
-        "script/cmtool.sh"
+        "script/cmtool.sh",
+        "script/develsdk.sh"
       ],
       "type": "shell"
     }
